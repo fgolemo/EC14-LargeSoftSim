@@ -1,8 +1,8 @@
 from __future__ import division
 from FeatureExtractorAbstract import FeatureExtractorAbstract
-from helpers.getVoxelData import VoxelData
+from ..helpers.getVoxelData import VoxelData
 import os
-from helpers.config import PathConfig
+from ..helpers.config import PathConfig
 import math
 
 
@@ -10,8 +10,11 @@ class CompositionComplexity(FeatureExtractorAbstract):
     def getCSVheader(self):
         return ['CompositionEntropy']
 
-    def extract(self, experiment, type, indiv):
-        filepath = experiment[2] + os.path.sep + PathConfig.populationFolderNormal + os.path.sep + indiv[0] + "_vox.vxa"
+    def extract(self, experiment, type, indiv, arena_size):
+        if type == 'no disease':
+            filepath = experiment[2] + os.path.sep + PathConfig.populationFolderNormal + os.path.sep + indiv[0] + "_vox.vxa"
+        else:
+            filepath = experiment[2] + os.path.sep + PathConfig.populationFoldersAlt[type] + os.path.sep + indiv[0] + "_vox.vxa"
 
         if not os.path.isfile(filepath):
             return ['NA']

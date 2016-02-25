@@ -1,14 +1,14 @@
 import os
 from FeatureExtractorAbstract import FeatureExtractorAbstract
-from helpers.config import PathConfig
-from helpers.distanceCalc import DistanceCalc
+from ..helpers.config import PathConfig
+from ..helpers.distanceCalc import DistanceCalc
 
 
 class RelHeight(FeatureExtractorAbstract):
     def getCSVheader(self):
         return ['relHeight']
 
-    def extract(self, experiment, type, indiv):
+    def extract(self, experiment, type, indiv, arena_size):
         filepath = experiment[2] + os.path.sep + PathConfig.traceFolderNormal + os.path.sep + indiv[0] + ".trace"
         dc = DistanceCalc()
         if not os.path.isfile(filepath):

@@ -1,12 +1,12 @@
 from __future__ import division
 
 from FeatureExtractorAbstract import FeatureExtractorAbstract
-from helpers.getVoxelData import VoxelData
+from ..helpers.getVoxelData import VoxelData
 from scipy.spatial import ConvexHull
 from scipy.ndimage import label
 import numpy as np
 import os
-from helpers.config import PathConfig
+from ..helpers.config import PathConfig
 
 
 class ShapeComplexity(FeatureExtractorAbstract):
@@ -16,7 +16,7 @@ class ShapeComplexity(FeatureExtractorAbstract):
     def getCSVheader(self):
         return ['hullRatio','triangles', 'limbs', 'shapeComplexity']
 
-    def extract(self, experiment, type, indiv):
+    def extract(self, experiment, type, indiv, arena_size):
         filepath = experiment[2] + os.path.sep + PathConfig.populationFolderNormal + os.path.sep + indiv[0] + "_vox.vxa"
 
         if not os.path.isfile(filepath):

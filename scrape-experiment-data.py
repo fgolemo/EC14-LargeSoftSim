@@ -3,25 +3,9 @@ import glob
 import re
 import os
 import cPickle as pickle
-from featureExtractors.AbsoluteCellCountOriginal import AbsoluteCellCountOriginal
-from featureExtractors.RelativeCellCountOriginal import RelativeCellCountOriginal
-from featureExtractors.AbsoluteCellCountAlt import AbsoluteCellCountAlt
-from featureExtractors.RelativeCellCountAlt import RelativeCellCountAlt
-from featureExtractors.BasicInfo import BasicInfo
-from featureExtractors.DistanceAlt import DistanceAlt
-from featureExtractors.DistanceOriginal import DistanceOriginal
-from featureExtractors.MutProbability import MutProbability
-from featureExtractors.Lifetime import Lifetime
-from featureExtractors.SizeOnAxis import SizeOnAxis
-from featureExtractors.RelHeight import RelHeight
-from featureExtractors.MuscleLocation import MuscleLocation
-from featureExtractors.Symmetry import Symmetry
-from featureExtractors.Arc import Arc
-from featureExtractors.Monotony import Monotony
-from featureExtractors.Gait import Gait
-from featureExtractors.ShapeComplexity import ShapeComplexity
-from featureExtractors.CompositionComplexity import CompositionComplexity
-from helpers.config import PathConfig
+from data_collector.featureExtractors import *
+from data_collector.helpers.config import PathConfig
+import ConfigParser
 
 __author__ = 'meta'
 
@@ -95,7 +79,8 @@ class DataCollector2:
             Monotony(),
             Gait(),
             ShapeComplexity(),
-            CompositionComplexity()
+            CompositionComplexity(),
+            Birthtime(),
         ]
         self.pickleLocation = os.path.dirname(
             os.path.realpath(__file__)) + os.path.sep + ".datacollector2-progress.pickle"
@@ -124,6 +109,7 @@ class DataCollector2:
                 [exp[0] for exp in experiments]
         for exp in experiments:
             type = self.getType(exp)
+            arena_size = self.getArenaSize(exp)
             # print exp[0],type
             individuals = self.getIndividuals(exp)
             print "parsing experiment {exp} (type: {type}) with {indivs} individuals".format(
@@ -133,10 +119,10 @@ class DataCollector2:
             )
             count = 0
             for indiv in individuals[:self.limit]:
-                features = self.getFeatures(exp, type, indiv)
+                features = self.getFeatures(exp, type, indiv, arena_size)
                 self.writeFeatures(features)
                 count += 1
-                self.printExperimentProgress(len(individuals), count)
+                self.printExperimentProgress(min(len(individuals), self.limit), count)
             self.saveProgress(exp)
 
         self.closeFile()
@@ -178,6 +164,25 @@ class DataCollector2:
         # if neither is the case, then there are no population files for this experiment... abort
         self.errorHasNoPop(experiment)
 
+    def getArenaSize(self, experiment):
+        arena_size = {}
+        with open(experiment[2] + "/config/config.ini") as fh:
+            cp = ConfigParser.RawConfigParser()
+            cp.readfp(fh)
+            x = cp.getfloat('Arena', 'x')
+            y = cp.getfloat('Arena', 'y')
+            if x == 0.25 and y == 0.25:
+                arena_size['name'] = 'small'
+            elif x == 0.5 and y == 0.5:
+                arena_size['name'] = 'big'
+            else:
+                arena_size['name'] = 'unknown'
+            arena_size['x'] = x
+            arena_size['y'] = y
+
+
+        return arena_size
+
     def hasAltPopWithoutDisease(self, experiment):
         return self.hasAltPop(experiment, "no disease")
 
@@ -192,10 +197,10 @@ class DataCollector2:
             return True
         return False
 
-    def getFeatures(self, experiment, type, indiv):
+    def getFeatures(self, experiment, type, indiv, arena_size):
         output = []
         for feature in self.featureExtractors:
-            output += feature.extract(experiment, type, indiv)
+            output += feature.extract(experiment, type, indiv, arena_size)
         return output
 
     def printExperimentProgress(self, total, current):
